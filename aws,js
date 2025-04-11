@@ -1,0 +1,901 @@
+import AWS_SDK from "@salesforce/resourceUrl/AWSSDK";
+import buildJSON from "@salesforce/apex/LISDocumentGeneration.buildJSON";
+import getTemplateMappingsForDocument from "@salesforce/apex/LISDocumentGeneration.getTemplateMappingsForDocument";
+import getRelatedObjectData from "@salesforce/apex/LISDocumentGeneration.getRelatedObjectData";
+
+import { DOCUMENT_URL_FIELD } from "./lISDocumentGenerationLWC";
+import { DOCUMENT_TEMPLATE_ID } from "./lISDocumentGenerationLWC";
+import { DOCUMENT_NAME_FIELD } from "./lISDocumentGenerationLWC";
+import { DOCUMENT_STATUS_FIELD } from "./lISDocumentGenerationLWC";
+import { ADVANCE_ID_FIELD } from "./lISDocumentGenerationLWC";
+import { BOX_FILE_ID_FIELD } from "./lISDocumentGenerationLWC";
+import { FUNDING_APPLICATION_ID_FIELD } from "./lISDocumentGenerationLWC";
+import { PLAINTIFF_CASE_ID_FIELD } from "./lISDocumentGenerationLWC";
+import { GENERATED_DOCUMENT_OBJECT } from "./lISDocumentGenerationLWC";
+//import { createRecord, updateRecord, getFieldValue } from './lISDocumentGenerationLWC';
+import { createRecord, updateRecord } from "lightning/uiRecordApi";
+
+// Define stepList directly
+export const stepList = [
+  { label: "Confirm", value: "1" },
+  { label: "Validating", value: "2" },
+  { label: "Generating", value: "3" },
+  { label: "Review", value: "4" },
+  { label: "Complete", value: "5" },
+];
+
+export const caseStepList = [
+  { label: "Generating", value: "1" },
+  { label: "Review", value: "2" },
+  { label: "Send Email", value: "3" },
+  { label: "Complete", value: "4" },
+];
+
+function establishSteps(component, getAdvanceLines) {
+  // Assign the steps array to the component
+  if (component.templateInfo.Requires_Data_Validation__c == true) {
+    component.stepsArray = stepList;
+    getAdvanceLines({ advID: component.recordId }).then((result) => {
+      console.log(
+        "Returned LINE Results FROM AWS.JS: " + JSON.stringify(result)
+      );
+      component.advanceLines = result;
+      /*component.template.querySelector('.confirm').classList.add('slds-hide');
+            component.template.querySelector('.validating').classList.remove('slds-hide');*/
+    });
+  } else {
+    component.stepsArray = caseStepList;
+  }
+  console.log("FINAL STEP ARRAY: " + JSON.stringify(component.stepsArray));
+}
+
+export function initializeDocumentGeneration(component, getAdvanceLines) {
+  console.log(
+    "ADVANCE STATUS IN LIS DOCGEN FROM AWS.JS: " + component.advanceStatus
+  );
+  establishSteps(component, getAdvanceLines);
+  console.log(
+    "IN CASE TRACKER GENERATE DOCMENTS CONNECTED CALLBACK..... FROM AWS.JS"
+  );
+  console.log("OBJECT API NAME FROM AWS.JS:  " + component.objectApiName);
+  component.currentRecordId = component.recordId;
+  console.log("RecordsId FROM AWS.JS:  " + component.currentRecordId);
+}
+
+export function fetchGeneratedDocuments({
+  recordId,
+  objectApiName,
+  getGeneratedDocuments,
+  component,
+}) {
+  console.log("Fetching generated documents from AWS.js...");
+
+  getGeneratedDocuments({ recordId, objectName: objectApiName })
+    .then((result) => {
+      console.log(
+        "RETRIEVED GENERATED DOCUMENTS from AWS.js...: " +
+          JSON.stringify(result)
+      );
+
+      component.tempData = result.map((item) => {
+        let sendSignIcon = " ";
+        let sendSignVariant = " ";
+        let sendSignDisabled = " ";
+        let buttonLabel = " ";
+
+        if (item.Document_Status__c === "Pending Approval") {
+          sendSignVariant = "brand-outline";
+          sendSignIcon = "utility:approval";
+          buttonLabel = "Pending Approval";
+          sendSignDisabled = true;
+        } else if (item.Document_Status__c === "Approved") {
+          if (objectApiName === "Plaintiff_Case_Advance__c") {
+            sendSignVariant = "brand";
+            sendSignIcon = "utility:send";
+            buttonLabel = "Send for Signature";
+            sendSignDisabled = false;
+          } else if (objectApiName === "Plaintiff_Case__c") {
+            sendSignVariant = "brand";
+            sendSignIcon = "utility:send";
+            buttonLabel = "Email Copy";
+            sendSignDisabled = true;
+          }
+        } else if (item.Document_Status__c === "Rejected") {
+          sendSignVariant = "destructive";
+          sendSignIcon = "action:close";
+          buttonLabel = "Document Rejected";
+          sendSignDisabled = true;
+        } else if (item.Document_Status__c === "Sent for Signature") {
+          sendSignVariant = "success";
+          sendSignIcon = "action:update_status";
+          buttonLabel = "Sign Request Sent";
+          sendSignDisabled = true;
+          component.signatureStatusDocs.push(item);
+        } else if (item.Document_Status__c === "Signing Complete") {
+          sendSignVariant = "success";
+          sendSignIcon = "action:update_status";
+          buttonLabel = "Completed";
+          sendSignDisabled = true;
+          component.signatureStatusDocs.push(item);
+        }
+
+        return {
+          ...item,
+          sendSignIcon: sendSignIcon,
+          sendSignVariant: sendSignVariant,
+          sendSignDisabled: sendSignDisabled,
+          buttonLabel: buttonLabel,
+        };
+      });
+
+      component.documentData = component.tempData;
+      console.log(
+        "SETTING DOCUMENT-DATATABLE from AWS.js...: " +
+          JSON.stringify(component.documentData)
+      );
+    })
+    .catch((error) => {
+      console.error(
+        "Error fetching generated documents from AWS.js...: ",
+        error
+      );
+    });
+}
+
+export function launchDocumentModal(component) {
+  console.log("Launching document modal from AWS.js...");
+  component.launchDocuments = true;
+}
+
+export function handleSelectedDocuments({
+  templateId,
+  documentTempID,
+  event,
+  getDocumentDetails,
+}) {
+  let result = {
+    disableNext: false,
+    documentTempID: null,
+    templateId: null,
+    documentLabel: "",
+    documentVariant: "",
+    documentIcon: "",
+    extensionType: "",
+    extensionIcon: "",
+  };
+
+  if (templateId == null || templateId === "") {
+    result.disableNext = false;
+    console.log("###Current Target FROM AWS.JS : " + event.currentTarget.value);
+    result.documentTempID = event.currentTarget.value;
+    console.log(
+      "Requires Data Validation FROM AWS.JS? " + event.currentTarget.name
+    );
+    result.requiresValidation = event.currentTarget.name;
+    console.log("###Current Target ID FROM AWS.JS : " + event.currentTarget.id);
+    let currentID = event.currentTarget.id;
+    result.templateId = currentID.split("-")[0];
+    console.log("TEMPLATE ID FOR DOCUMENT FROM AWS.JS: " + result.templateId);
+    result.documentLabel = "Selected";
+    result.documentVariant = "success";
+    result.documentIcon = "utility:check";
+  } else {
+    result.documentTempID = null;
+    result.templateId = null;
+    console.log("TEMPLATE ID FOR DOCUMENT FROM AWS.JS: " + result.templateId);
+    result.disableNext = true;
+    result.documentLabel = "Select";
+    result.documentVariant = "brand-outline";
+    result.documentIcon = "utility:add";
+  }
+
+  return getDocumentDetails({ docId: result.templateId })
+    .then((docResult) => {
+      if (docResult) {
+        result.extensionType = docResult.Template_Type__c;
+        console.log(
+          "TEMPLATE EXTENSION RETRIEVED FROM AWS.JS: " + result.extensionType
+        );
+
+        switch (result.extensionType) {
+          case "xlsx":
+            result.extensionIcon = "doctype:excel";
+            break;
+          case "docx":
+            result.extensionIcon = "doctype:word";
+            break;
+          default:
+            result.extensionIcon = "doctype:unknown";
+            break;
+        }
+      } else {
+        console.log(
+          "No document details found for the specified ID. FROM AWS.JS"
+        );
+      }
+
+      return result; // return the updated result object with all necessary data
+    })
+    .catch((error) => {
+      console.error("Error retrieving document details FROM AWS.JS: ", error);
+      throw error; // propagate the error back to LWC for handling
+    });
+}
+
+export function handleNextStep({
+  recordData,
+  currentTabValue,
+  documentIds,
+  recordId,
+  objectApiName,
+  boxFolderId,
+  extensionType,
+  templateId,
+  sourceType,
+  requiresValidation,
+  component,
+  buildJSON,
+  getAdvanceData,
+  getAdvanceLines,
+  getCaseData,
+  getAppData,
+  getDocumentIds,
+  getTemplateMappingsForDocument,
+  uploadFileToBoxFromS3,
+  getGeneratedStats,
+}) {
+  let filePreviewUrl;
+  console.log("STEP THAT NEXT BUTTON WAS CLICKED ON: " + currentTabValue);
+  console.log("S3 Document ID: " + component.templateInfo.S3_Document_ID__c);
+  component.documentTempID = component.templateInfo.S3_Document_ID__c;
+  if (currentTabValue === "1") {
+    if (component.templateInfo.Requires_Data_Validation__c == true) {
+      console.log("EXECUTE DATA VALIDATION");
+      let validated = validatingData(component);
+
+      if (validated == true) {
+        console.log("VALIDATION COMPLETED");
+      }
+    } else {
+      component.showGenerateSpinner = true;
+      component.proceedButtonLabel = "Next";
+
+      console.log("EXECUTE DOCUMENT GENERATION");
+      retrieveCaseData(recordId, component, getCaseData);
+      console.log("BUILDING JSON FOR MES FILE GENERATION.... FROM AWS.JS");
+      buildJSON({
+        s3DocumentIds: documentIds,
+        objectName: objectApiName,
+        recordId: recordId,
+      })
+        .then((result) => {
+          console.log("Build JSON Response FROM AWS.JS: " + result);
+          component.templateMappings = result;
+          console.log(
+            "MEDICAL BILLS FROM AWS.JS: " + component.templateMappings
+          );
+
+          console.log("IN THE HANDLE NEXT GENERATEDOCUMENT FROM AWS.JS");
+
+          generateDocument(component)
+            .then((responseData) => {
+              if (responseData && responseData.signedURL) {
+                //filePreviewUrl = responseData.signedURL;
+                component.filePreviewUrl = responseData.signedURL;
+                console.log(
+                  "Document filePreviewUrl FROM AWS.JS: " +
+                    component.filePreviewUrl
+                );
+
+                console.log(
+                  "Document URL FROM AWS.JS: " + responseData.signedURL
+                );
+
+                const docURL =
+                  "https://view.officeapps.live.com/op/view.aspx?src=" +
+                  filePreviewUrl;
+                component.showGenerateSpinner = false;
+                component.disableNext = false;
+                component.disablePrevious = false;
+                component.proceedButtonLabel = "Confirm & Next";
+
+                // Hide step 4 and show step 5
+                component.template
+                  .querySelector(".generating")
+                  .classList.add("slds-hide");
+                component.template
+                  .querySelector(".review")
+                  .classList.remove("slds-hide");
+
+                // Update current tab value
+
+                component.currentTabValue = "2";
+                console.log(
+                  "CURRENT TAB VALUE FROM AWS.JS::::::::::::::: " +
+                    component.currentTabValue
+                );
+                console.log(
+                  "CURRENT BUTTON LABEL FROM AWS.JS::::::::::::::: " +
+                    component.proceedButtonLabel
+                );
+              } else {
+                component.showGenerateSpinner = false;
+                component.generateError = true;
+                component.proceedButtonLabel = "Next";
+                currentTabValue = "4";
+
+                if (responseData.startsWith("lawFirmStreet")) {
+                  let errorItem = {
+                    icon: "utility:error",
+                    message: responseData,
+                    recommend:
+                      "Cancel Document Generation and ensure Law Firm Street address is on one line under Lawyer Tab on Case FROM AWS.JS.",
+                  };
+                  component.generateErrorData.push(errorItem);
+                }
+              }
+            })
+            .catch((error) => {
+              console.error("Error generating document FROM AWS.JS:", error);
+
+              component.generateError = true;
+              component.proceedButtonLabel = "Next";
+              currentTabValue = "2";
+            });
+
+          console.log("OUT OF THE HANDLE NEXT GENERATEDOCUMENT FROM AWS.JS");
+        })
+        .catch((error) => {
+          console.error("Error FROM HANDLE NEXT AWS.JS: " + error);
+        });
+    }
+  } else if (currentTabValue === "2") {
+  } else if (currentTabValue === "3") {
+  } else if (currentTabValue === "5") {
+    console.log("TAB VALUE FROM AWS.JS: " + currentTabValue);
+    console.log("objectApiName FROM AWS.JS: " + objectApiName);
+    console.log("extensionType FROM AWS.JS: " + extensionType);
+    console.log("boxFolderId FROM AWS.JS: " + boxFolderId);
+    console.log("plaintiffFirst FROM AWS.JS: " + component.plaintiffFirst);
+    console.log("plaintiffLast FROM AWS.JS: " + component.plaintiffLast);
+    console.log("filePreviewUrl FROM AWS.JS: " + component.filePreviewUrl);
+    console.log("templateId FROM AWS.JS: " + templateId);
+
+    uploadBoxFileWithLambdaURL(
+      {
+        plaintiffFirst: component.plaintiffFirst,
+        plaintiffLast: component.plaintiffLast,
+        filePreviewUrl: component.filePreviewUrl,
+      },
+      uploadFileToBoxFromS3,
+      getGeneratedStats,
+      objectApiName,
+      boxFolderId,
+      extensionType,
+      recordId,
+      templateId,
+      component
+    );
+    component.showBoxSpinner = true;
+  } else if (currentTabValue === "7") {
+    component.stepName = "Complete";
+    component.iconName = "standard:task";
+    let currentStep = "Complete";
+    establishSteps(currentStep, component);
+
+    component.proceedButtonLabel = "Next";
+
+    component.template.querySelector(".stepSeven").classList.add("slds-hide");
+    component.template
+      .querySelector(".stepEight")
+      .classList.remove("slds-hide");
+    currentTabValue = "8";
+  } else if (currentTabValue === "8") {
+    component.proceedButtonLabel = "Close";
+    closeDocumentModal(component);
+  }
+}
+
+export function validatingData(component) {
+  console.log("IN THE validatingData FUNCTION");
+  //component.currentTabValue = "2";
+  let recordData = component.recordData;
+  console.log("Record Data for Validation: " + JSON.stringify(recordData));
+
+  console.log("Step 2 Selected ");
+  //component.showValidateSpinner = true;
+  component.stepName = "Validating Data";
+  component.iconName = "standard:data_integration_hub";
+  component.disableNext = true;
+  component.showPrevious = true;
+  component.disablePrevious = true;
+  component.proceedButtonLabel = "Next";
+
+  if (
+    !component.plaintiffFirst ||
+    !component.plaintiffFirst ||
+    !component.plaintiffEmail ||
+    !component.plaintiffStreet ||
+    !component.plaintiffCity ||
+    !component.plaintiffState ||
+    !component.plaintiffZip ||
+    !component.attorneyEmail ||
+    !component.advanceUseage
+  ) {
+    console.log("DATA IS NOT VALIDATED FROM AWS.JS");
+    component.showValidateSpinner = false;
+    component.validateError = true;
+    component.disableNext = true;
+    component.disablePrevious = false;
+    component.errorData = [];
+
+    if (!component.plaintiffEmail) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message =
+          "Plaintiff Email Address is missing. Please check email address.");
+      errorItem.recommend =
+        "Click on Previous button and ensure email address is under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffFirst) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff First Name is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure First Name is under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffLast) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff Last Name is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure Last Name is under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffStreet) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff Street is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure Street is filled in under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffCity) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff City is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure City is filled in under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffState) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff State is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure State is filled in under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+    if (!component.plaintiffZip) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Plaintiff Zip/Postal Code is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure Zip/Postal Code is filled in under Plaintiff Information";
+      component.errorData.push(errorItem);
+    }
+
+    if (!component.attorneyEmail) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Attorney Email is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure Attorney Email is filled in under Attorney Information";
+      component.errorData.push(errorItem);
+    }
+
+    if (!component.advanceUseage) {
+      let errorItem = {};
+      (errorItem.icon = "utility:error"),
+        (errorItem.message = "Usage Fee is missing.");
+      errorItem.recommend =
+        "Click on Previous button and ensure Usage Fee is filled in under Advance Information";
+      component.errorData.push(errorItem);
+    }
+
+    console.log(
+      "ERROR TABLE DATA FROM AWS.JS: " + JSON.stringify(component.errorData)
+    );
+    return false;
+  } else {
+    console.log("DATA IS VALIDATED!!! FROM AWS.JS");
+    console.log("ADVANCE ID FROM AWS.JS: " + component.recordId);
+    console.log("ADANCE-CASE ID FROM AWS.JS: " + component.advanceCaseID);
+    //component.dataValidated = true;
+    return true;
+  }
+}
+
+//FUNCTION IS USED FOR CASE DOCUMENTS - MEDICAL EXPENSE SUMMARY
+export function createJSON(component) {
+  component.template.querySelector(".confirm").classList.add("slds-hide");
+  component.template.querySelector(".generating").classList.remove("slds-hide");
+  component.showGenerateSpinner = true;
+  component.proceedButtonLabel = "Next";
+  buildJSON({
+    s3DocumentIds: component.templateInfo.S3_Document_ID__c,
+    objectName: component.objectApiName,
+    recordId: component.recordId,
+  }).then((result) => {
+    console.log("Build JSON Response FROM AWS.JS: " + result);
+    component.templateMappings = result;
+    console.log("MEDICAL BILLS FROM AWS.JS: " + component.templateMappings);
+
+    console.log("IN THE HANDLE NEXT GENERATEDOCUMENT FROM AWS.JS");
+
+    generateDocument(component)
+      .then((responseData) => {
+        if (responseData && responseData.signedURL) {
+          //filePreviewUrl = responseData.signedURL;
+          component.filePreviewUrl = responseData.signedURL;
+          console.log(
+            "Document filePreviewUrl FROM AWS.JS: " + component.filePreviewUrl
+          );
+
+          console.log("Document URL FROM AWS.JS: " + responseData.signedURL);
+          let fileLink = responseData.signedURL;
+          return fileLink;
+          //let fileLink = uploadToAzure(component, responseData.signedURL);
+          /*console.log('FileLink returned from azureUploader: '+fileLink);
+                    if(fileLink == true){
+                                                    
+                        return true;
+                    }*/
+        } else {
+          component.showGenerateSpinner = false;
+          component.generateError = true;
+          component.proceedButtonLabel = "Next";
+          component.currentTabValue = "4";
+
+          if (responseData.startsWith("lawFirmStreet")) {
+            let errorItem = {
+              icon: "utility:error",
+              message: responseData,
+              recommend:
+                "Cancel Document Generation and ensure Law Firm Street address is on one line under Lawyer Tab on Case FROM AWS.JS.",
+            };
+            component.generateErrorData.push(errorItem);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Error generating document FROM AWS.JS:", error);
+
+        component.generateError = true;
+        component.proceedButtonLabel = "Next";
+        component.currentTabValue = "2";
+      });
+
+    console.log("OUT OF THE HANDLE NEXT GENERATEDOCUMENT FROM AWS.JS");
+  });
+}
+
+/*export async function uploadToAzure(component, awsUrl){
+    let url = decodeURIComponent(awsUrl);
+    console.log('Decoded URI: ' + url);
+    if (url !== "undefined") {
+        let trimmedUrl = url.split(".com/")[1];
+        let finalUrl = trimmedUrl.substring(0, trimmedUrl.indexOf("?"));
+        console.log('finalUrl: ' + finalUrl);
+
+        let azureUploadURL = 
+        "https://prod-50.westus.logic.azure.com:443/workflows/0c13a538cf124cd986d593683e263e2b/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=USVzK2JFg8I4BknAbyDVyxzShnw6Qr6fnVrAosTLxWE"                        
+
+        const requestBody = {
+            //checks: preppedCheckData
+            templateId: ``,
+            bucketName: `test-hmr-uat`,
+            s3File: `${finalUrl}`
+        };
+            
+        console.log('FULL REQUEST BODY TO AZURE: '+JSON.stringify(requestBody));
+        const response = await fetch(azureUploadURL, {
+            method: 'Post',
+            headers: {
+                'Content-Type': 'application/json',
+                
+            },
+            body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+
+        console.log('File URL from AZURE: '+data.fileLink);
+        //const docURL = "https://view.officeapps.live.com/op/view.aspx?src=" +data.fileLink;
+        const docURL = data.fileLink;
+                              
+        return docURL;
+    }
+}*/
+
+export async function generateDocument({
+  component,
+  currentTabValue,
+  templateInfo,
+  templateMappings,
+  documentTempID,
+  docGenEndpoint,
+  docGenTool,
+  sourceType,
+}) {
+  console.log("MADE IT TO GENERATE THE DOCUMENT....FROM AWS.JS");
+
+  if (!templateMappings) {
+    console.error("Template mappings not available FROM AWS.JS.");
+    return;
+  }
+  const lambdaUrl = docGenEndpoint + "" + documentTempID;
+  console.log("Endpoint URL ==> " + lambdaUrl);
+
+  const requestBody = { templateMappings };
+  let jsonBody;
+
+  const apiKey = docGenTool.API_Key__c;
+  console.log("API Key Passed: " + apiKey);
+  if (
+    templateInfo.Requires_Data_Validation__c == false &&
+    sourceType !== "Funding Application"
+  ) {
+    console.log("JSON BODY FROM AWS.JS--> VALIDATION == FALSE: ");
+    jsonBody = JSON.stringify(requestBody);
+    console.log("DOCGEN REQUEST BODY FROM AWS.JS: " + jsonBody);
+  } else {
+    console.log("JSON BODY FROM AWS.JS --> VALIDATION == TRUE: ");
+    jsonBody = templateMappings;
+    console.log("DOCGEN REQUEST BODY FROM AWS.JS: " + jsonBody);
+  }
+
+  try {
+    const response = await fetch(lambdaUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: jsonBody,
+    });
+
+    const responseData = await response.json();
+    console.log("Lambda response:", responseData);
+
+    if (responseData && responseData.signedURL) {
+      return responseData; // Successful document generation
+      //sendData(component, templateInfo, responseData);
+    } else {
+      return Promise.reject("Document generation failed, no signed URL"); // Error scenario
+    }
+  } catch (error) {
+    console.error("Error generating document FROM AWS.JS:", error);
+    return Promise.reject(error); // Error scenario
+  }
+}
+
+function retrieveCaseData(recordId, component, getCaseData) {
+  return getCaseData({ caseID: recordId })
+    .then((result) => {
+      console.log("RESULT OF CASE DATA FROM AWS.JS: " + JSON.stringify(result));
+
+      component.plaintiffFirst = result.Plaintiff_First_Name__c;
+      component.plaintiffLast = result.Plaintiff_Last_Name__c;
+      component.caseNumber = result.Name;
+    })
+    .catch((error) => {
+      console.error("Error retrieving case data FROM AWS.JS: ", error);
+    });
+}
+
+export function sendData(component, templateInfo, docData) {
+  console.log(
+    "Sending responseData back to lISDocumentGenerationLWC.js " +
+      JSON.stringify(responseData)
+  );
+  if (templateInfo.Requires_Data_Validation__c == true) {
+    responseData = docData;
+    currentTabValue = "4";
+    template.querySelector(".generating").classList.add("slds-hide");
+    template.querySelector(".review").classList.remove("slds-hide");
+  }
+}
+
+function retrieveFundingAppData(recordId, component, getAppData) {
+  return getAppData({ AppId: recordId })
+    .then((result) => {
+      console.log(
+        "RESULT OF FUNDING APP DATA FROM AWS.JS: " + JSON.stringify(result)
+      );
+
+      component.plaintiffFirst = result.Plaintiff_First_Name__c;
+      component.plaintiffLast = result.Plaintiff_Last_Name__c;
+    })
+    .catch((error) => {
+      console.error("Error retrieving funding app data FROM AWS.JS: ", error);
+    });
+}
+
+export function handleRetrieveTemplateMappings(component) {
+  console.log("AWS.JS --> HANDLE RETRIEVE TEMPLATE MAPPINGS....");
+  console.log("objectApiName: " + component.objectApiName);
+  console.log("recordId: " + component.recordId);
+  console.log("documentTempID: " + component.documentTempID);
+
+  getTemplateMappingsForDocument({
+    s3DocumentIds: component.documentTempID,
+    objectName: component.objectApiName,
+    recordId: component.recordId,
+    queryRelated: component.queryRelatedData,
+  })
+    .then((mappingResult) => {
+      console.log("AWS.JS --> RESULT OF TEMPLATE MAPPING:: " + mappingResult);
+      if (mappingResult) {
+        component.templateMappings = mappingResult;
+        component.currentTabValue = "4";
+        component.handleNext();
+        // Return template mappings for further use
+      } else {
+        component.generateError = true;
+        component.generateErrorMessage =
+          "There is no Template Mappings configured for this document.";
+      }
+    })
+    .catch((error) => {
+      console.error(
+        "Error FROM AWS.JS while retrieving template mappings:",
+        error
+      );
+    });
+}
+
+function uploadBoxFileWithLambdaURL(
+  plaintiffDetails,
+  uploadFileToBoxFromS3,
+  getGeneratedStats,
+  objectApiName,
+  boxFolderId,
+  extensionType,
+  recordId,
+  templateId,
+  component
+) {
+  console.log("GETTING S3 FILE CONTENTS...STANDBY.... FROM AWS.JS");
+
+  const { plaintiffFirst, plaintiffLast, filePreviewUrl } = plaintiffDetails;
+
+  // Log or process the values
+  console.log("Plaintiff First Name:", plaintiffFirst);
+  console.log("Plaintiff Last Name:", plaintiffLast);
+  console.log("File Preview URL:", filePreviewUrl);
+  console.log("Object API Name:", objectApiName);
+  console.log("Box Folder ID:", boxFolderId);
+  console.log("Extension Type:", extensionType);
+  console.log("Record ID:", recordId);
+  console.log("Template ID:", templateId);
+
+  // Formatting the current date and time
+  const currentDate = new Date();
+  const formattedDate = currentDate
+    .toLocaleDateString("en-US")
+    .replace(/\//g, "-");
+  const formattedTime = currentDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const formattedDateTime = `${formattedDate}, ${formattedTime}`;
+
+  let fileName = "";
+  if (objectApiName === "Plaintiff_Case_Advance__c") {
+    console.log(
+      `PROPOSED DOC NAME FROM AWS.JS: ${plaintiffLast}, ${plaintiffFirst} - HMRS-$${advanceAmount}, ${formattedDateTime}.${extensionType}`
+    );
+    fileName = `${plaintiffLast},${plaintiffFirst}-HMRS-$${advanceAmount},${formattedDateTime}.${extensionType}`;
+  } else if (objectApiName === "Plaintiff_Case__c") {
+    console.log(
+      `PROPOSED DOC NAME FROM AWS.JS: ${plaintiffLast}, ${plaintiffFirst} - HMRS-MES, ${formattedDateTime}.${extensionType}`
+    );
+    fileName = `${plaintiffLast},${plaintiffFirst}-HMRS-MES,${formattedDateTime}.${extensionType}`;
+  } else if (objectApiName === "Funding_Application__c") {
+    console.log(
+      `PROPOSED DOC NAME FROM AWS.JS: ${plaintiffLast}, ${plaintiffFirst} - HMRS - Executed Background ${formattedDateTime}.${extensionType}`
+    );
+    fileName = `${plaintiffLast},${plaintiffFirst}-HMRS - Executed Background${formattedDateTime}.${extensionType}`;
+  }
+
+  console.log(
+    "UPLOADING MODIFIED FILE FROM S3 TO BOX WITH LAMBDA URL FROM AWS.JS: " +
+      filePreviewUrl
+  );
+  console.log(
+    "boxFolderId in uploadBoxFileWithLambdaURL FROM AWS.JS: " + boxFolderId
+  );
+  console.log(
+    "fileName in uploadBoxFileWithLambdaURL FROM AWS.JS: " + fileName
+  );
+  console.log(
+    "templateId in uploadBoxFileWithLambdaURL FROM AWS.JS: " + templateId
+  );
+  return uploadFileToBoxFromS3({
+    fileName: fileName,
+    folderId: boxFolderId,
+    preSignedURL: filePreviewUrl,
+  }).then((result) => {
+    console.log("FILE UPLOADED TO BOX FROM S3 FROM AWS.JS...");
+    console.log("BOX FILE ID FROM AWS.JS: " + result);
+    let boxFileId = result; // Store the Box file ID in the component
+    insertDocumentRecord(
+      fileName,
+      templateId,
+      filePreviewUrl,
+      objectApiName,
+      recordId,
+      boxFolderId,
+      boxFileId,
+      getGeneratedStats,
+      component
+    );
+  });
+}
+
+export function closeDocumentModal(component) {
+  component.launchDocuments = false;
+  //resetIndicatorToBeginning();
+  component.currentStep = component.stepList.split(",")[0];
+  establishSteps(currentStep, component);
+
+  component.advanceEdit = true;
+  component.currentTabValue = "1";
+  component.template.querySelector(".gen1").classList.add("slds-is-active");
+  component.template.querySelector(".gen2").classList.remove("slds-is-active");
+  component.template.querySelector(".gen3").classList.remove("slds-is-active");
+  component.template.querySelector(".gen4").classList.remove("slds-is-active");
+  component.template.querySelector(".gen5").classList.remove("slds-is-active");
+  component.template.querySelector(".gen6").classList.remove("slds-is-active");
+  component.template.querySelector(".gen7").classList.remove("slds-is-active");
+  component.template.querySelector(".gen8").classList.remove("slds-is-active");
+
+  component.template.querySelector(".stepOne").classList.remove("slds-hide");
+  component.template.querySelector(".stepTwo").classList.add("slds-hide");
+  component.template.querySelector(".stepThree").classList.add("slds-hide");
+  component.template.querySelector(".stepFour").classList.add("slds-hide");
+  component.template.querySelector(".stepFive").classList.add("slds-hide");
+  component.template.querySelector(".stepSix").classList.add("slds-hide");
+  component.template.querySelector(".stepSeven").classList.add("slds-hide");
+  component.template.querySelector(".stepEight").classList.add("slds-hide");
+}
+
+export function downloadDocumentModal(component) {
+  console.log("filePreviewUrl FROM AWS.JS: " + component.filePreviewUrl);
+  window.open(component.filePreviewUrl, "_blank");
+}
+
+function uploadBoxFile(
+  fileName,
+  boxFolderId,
+  presignedGETURL,
+  component,
+  uploadFileToBoxFromS3
+) {
+  console.log(
+    "UPLOADING MODIFIED FILE FROM S3 TO BOX FROM AWS.JS: " + presignedGETURL
+  );
+
+  return uploadFileToBoxFromS3({
+    fileName: fileName,
+    folderId: boxFolderId,
+    preSignedURL: presignedGETURL,
+  }).then((result) => {
+    console.log("FILE UPLOADED TO BOX FROM S3 FROM AWS.JS...");
+    console.log("BOX FILE ID FROM AWS.JS: " + result);
+    component.boxFileId = result; // Store the box file ID in the component
+    insertDocumentRecord();
+  });
+}
