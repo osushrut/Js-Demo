@@ -1,4 +1,6 @@
-// index.js
-console.log("Hello from JavaScript!");
-const add = (a, b) => a + b;
-console.log("Sum of 5 and 7 is:", add(5, 7));
+// calculator.js
+function add(a, b) {
+  return a + b;
+}
+
+console.log("3 + 3 =", add(3, 3));
