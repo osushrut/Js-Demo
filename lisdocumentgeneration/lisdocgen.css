@@ -1,0 +1,757 @@
+.h_iframe iframe {
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 500px;
+    width: 100%;
+  }
+  
+  img{
+  width: 120px;
+  height: 120px;
+  align-items: center;
+  }
+  
+  .stateBadge{
+    --slds-c-badge-color-background: rgb(30, 37, 73);
+    color: white;
+  }
+  
+  .successMessage{
+    font-size: 18px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: darkgreen;
+  }
+  
+  .successSubMessage{
+    font-size: 15px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+  
+  .progressBarClass{
+  --lwc-progressBarColorBackgroundFill: green;
+  }
+  
+  .stepSubHeader{
+  height: 50px;
+  }
+  
+  .stepSubHeaderInfo{
+  height: 56px;
+  }
+  
+  .stepSubHeaderInfoText{
+  font-size: 20px;
+  font-weight: bold;
+  font-family: "Courier New", Courier, monospace;
+  }
+  
+  .infoText{
+  font-size: 15px;
+  font-weight: bold;
+  font-family: inherit;
+  }
+  
+  .generateInfo{
+  height: 100px;
+  }
+  
+  .visualPicker{
+  width: 100%;
+  }
+  
+  .signHeader{
+  color: rgb(70, 71, 70);
+  font-family: 'Montserrat';
+  font-size: 16px;
+  text-align: left;
+  font-weight: bold;
+  }
+  
+  .signSubHeader{
+  color: rgb(70, 71, 70);
+  /*font-family: 'Montserrat';*/
+  font-size: 23px;
+  text-align: left;
+  }
+  
+  .stepHeader{
+  color: rgb(70, 71, 70);
+  font-family: 'Montserrat';
+  font-size: 20px;
+  text-align: left;
+  font-weight: bold;
+  }
+  
+  .confirmInfoHeaders{
+  background: #021361;
+  color: white;
+  font-family: 'Montserrat';
+  font-size: 15px;
+  }
+  
+  .signingOptions{
+  
+  color: rgb(70, 71, 70);
+  font-family: 'Montserrat';
+  font-size: 20px;
+  font-weight: bold;
+  }
+  
+  .genLayout{
+  height: 523px;
+  display: flex;
+  align-items: flex-start;
+  }
+  
+  .errorMessage{
+  color: red;
+  font-family: 'Montserrat';
+  font-size: 18px;
+  text-align: left;
+  }
+  
+  .panelTitles{
+    color: grey;
+    font-family: 'Montserrat';
+    font-size: 15px;
+    text-align: left;
+  }
+  
+  .panelMessages{
+    color: grey;
+    font-family: 'Montserrat';
+    font-size: 15px;
+    text-align: left;
+  }
+  
+  .generationComplete{
+  color: rgb(2, 123, 28);
+  font-family: 'Montserrat';
+  font-size: 25px;
+  text-align: left;
+  font-weight: bold;
+  }
+  
+  .approvalHeading{
+  color: rgb(109, 108, 108);
+  font-family: 'Montserrat';
+  font-size: 20px;
+  text-align: left;
+  }
+  
+  .approvalSubHeading{
+  color: rgb(109, 108, 108);
+  font-family: 'Montserrat';
+  font-size: 15px;
+  font-style: italic;
+  text-align: left;
+  }
+  
+  .reviewHeading{
+  color: rgb(109, 108, 108);
+  font-family: 'Montserrat';
+  font-size: 19px;
+  text-align: left;
+  }
+  
+  .reviewSubHeading{
+  color: rgb(109, 108, 108);
+  font-family: 'Montserrat';
+  font-size: 15px;
+  font-style: italic;
+  text-align: left;
+  }
+  
+  .subHeadings{
+  color: rgb(106, 106, 106);
+  font-family: inherit;
+  font-size: 18px;
+  text-align: left;
+  font-weight: bold;
+  }
+  
+  .subData{
+  color: rgb(82, 82, 82);
+  font-family: 'Montserrat';
+  font-size: 16px;
+  text-align: left;
+  text-transform: uppercase;
+  }
+  
+  .completeHeading{
+  color: rgb(27, 137, 0);
+  font-family: inherit;
+  font-size: 30px;
+  text-align: left;
+  font-weight: bold;
+  }
+  
+  .completeData{
+  color: rgb(82, 82, 82);
+  font-family: 'Montserrat';
+  font-size: 20px;
+  text-align: left;
+  text-transform: uppercase;
+  }
+  
+  .green{
+  color:green;
+  font-size: 25px;
+  font-family: 'Montserrat';
+  text-align: center;
+  font-weight: bolder;
+  }
+  .orange{
+  color:orange;
+  font-size: 25px;
+  font-family: 'Montserrat';
+  text-align: center;
+  font-weight: bold;
+  }
+  
+  .red{
+  color: red;
+  font-size: 25px;
+  font-family: 'Montserrat';
+  text-align: center;
+  font-weight: bold;
+  }
+  
+  .information{
+  
+  font-weight: bold;
+  color: red;
+  font-family: 'Montserrat';
+  font-size: 18px;
+  text-align: center;
+  align-content: center;
+  }
+  
+  .statusClassSuccess{
+  color:green;
+  font-size: 15px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bolder;
+  }
+  
+  .statusClassWarning{
+  color:rgb(243, 168, 7);
+  font-size: 15px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bolder;
+  }
+  
+  .statusClassError{
+  color:rgb(177, 1, 1);
+  font-size: 15px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bolder;
+  }
+  
+  .statusClassViewed{
+  color:rgb(2, 28, 175);
+  font-size: 15px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bolder;
+  }
+  
+  .docStatus{
+  color:green;
+  font-size: 18px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bold;
+  }
+  
+  .carHeader{
+  color: black;
+  font-size: 18px;
+  font-family: 'Montserrat';
+  text-transform: uppercase;
+  font-weight: bold;
+  }
+  
+  .myCard{
+  display: block;
+  /*box-shadow: 6px 7px 6px gray;*/
+  }
+  
+  .styled-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 1.0em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    border-radius: 0px;
+  }
+  
+  .styled-table thead tr {
+    background-color: #021361;
+    color: #ffffff;
+    text-align: left;
+    text-transform: uppercase;
+  }
+  
+  .styled-table th,
+  .styled-table td {
+    padding: 12px 15px;
+  }
+  
+  .styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+  }
+  
+  .styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+  }
+  
+  .styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #021361;
+  }
+  
+  .styled-table tbody tr.active-row {
+    font-weight: bold;
+    color: #021361;
+  }
+  
+  .validate-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 1.0em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    border-radius: 0px;
+  }
+  
+  .validate-table thead tr {
+    background-color: #444444;
+    color: #ffffff;
+    text-align: left;
+    text-transform: uppercase;
+  }
+  
+  .validate-table th,
+  .validate-table td {
+    padding: 12px 15px;
+  }
+  
+  .validate-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+  }
+  
+  .validate-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+  }
+  
+  .validate-table tbody tr:last-of-type {
+    border-bottom: 2px solid #444444;
+  }
+  
+  .validate-table tbody tr.active-row {
+    font-weight: bold;
+    color: #021361;
+  }
+  
+  /*VALIDATING SPINNER*/
+  .loader {
+  width: 48px;
+  height: 48px;
+  border: 3px dotted #021361;
+  border-style: solid solid dotted dotted;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  box-sizing: border-box;
+  animation: rotation 2s linear infinite;
+  }
+  .loader::after {
+  content: '';  
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  border: 3px dotted #FF3D00;
+  border-style: solid solid dotted;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  animation: rotationBack 1s linear infinite;
+  transform-origin: center center;
+  }
+    
+  @keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+  } 
+  @keyframes rotationBack {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+  } 
+  
+  /*GENERATE DOCUMENT SPINNER*/
+  .generate {
+    width: 175px;
+    height: 80px;
+    display: block;
+    margin:auto;
+    background-image: radial-gradient(circle 25px at 25px 25px, #FFF 100%, transparent 0), radial-gradient(circle 50px at 50px 50px, #FFF 100%, transparent 0), radial-gradient(circle 25px at 25px 25px, #FFF 100%, transparent 0), linear-gradient(#FFF 50px, transparent 0);
+    background-size: 50px 50px, 100px 76px, 50px 50px, 120px 40px;
+    background-position: 0px 30px, 37px 0px, 122px 30px, 25px 40px;
+    background-repeat: no-repeat;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .generate::before {
+    content: '';  
+    left: 60px;
+    bottom: 18px;
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #021361;
+    background-image: radial-gradient(circle 8px at 18px 18px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 18px 0px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 0px 18px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 36px 18px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 18px 36px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 30px 5px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 30px 5px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 30px 30px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 5px 30px, #FFF 100%, transparent 0), radial-gradient(circle 4px at 5px 5px, #FFF 100%, transparent 0);
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+    animation: rotationBack 3s linear infinite;
+  }
+  .generate::after {
+    content: '';  
+    left: 94px;
+    bottom: 15px;
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #021361;
+    background-image: radial-gradient(circle 5px at 12px 12px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 12px 0px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 0px 12px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 24px 12px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 12px 24px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 20px 3px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 20px 3px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 20px 20px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 3px 20px, #FFF 100%, transparent 0), radial-gradient(circle 2.5px at 3px 3px, #FFF 100%, transparent 0);
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+    animation: rotationBack 4s linear infinite reverse;
+  }
+  
+  
+  @keyframes rotationBack {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(-360deg);
+    }
+  }
+  
+  .signer-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  @keyframes animateC
+  {
+  0%
+  {
+    transform:rotate(0deg);
+  }
+  100%
+  {
+    transform:rotate(360deg);
+  }
+  }
+  @keyframes animate
+  {
+  0%
+  {
+    transform:rotate(45deg);
+  }
+  100%
+  {
+    transform:rotate(405deg);
+  }
+  }
+  
+  .signer-table thead tr {
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+  }
+  
+  .signer-table th,
+  .signer-table td {
+    padding: 12px 15px;
+  }
+  
+  .signer-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+  }
+  
+  .signer-table tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+  }
+  
+  .signer-table tbody tr:last-of-type {
+  border-bottom: 2px solid #009879;
+  }
+  
+  .signer-table tbody tr.active-row {
+  font-weight: bold;
+  color: #009879;
+  }
+  
+  .center-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  
+  }
+  
+  .Container {
+  flex: 1; 
+  padding-left: 20px;
+  }
+  
+  .progressBar{
+  width: max-content !important;
+  margin-top: 0 !important;
+  }
+  
+  .custom-spinner-message {
+  display: inline-flex;
+  align-items: center;
+  transform: rotate(-90deg);
+  transform-origin: 0 0;
+  white-space: nowrap;
+  margin-left: 2px; /* Adjust the margin as needed */
+  font-size: 20px; /* Adjust the font size as needed */
+  
+  font-weight: bold;
+  
+  }
+  
+  .custom-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  }
+  
+  
+  /* Box spinner */
+  .load {
+  animation: rotate 1s infinite;
+  height: 50px;
+  width: 50px;
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  }
+  .centered-spinner-text{
+  position: absolute;
+  top: 92%;
+  left: 53%;
+  transform: translate(-50%, -50%);
+  }
+  /* .backdrop{
+  position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #8181814d;
+    z-index: 9999; 
+  } */
+  
+  .load:before,
+  .load:after {
+  border-radius: 50%;
+  content: "";
+  display: block;
+  height: 20px;
+  width: 20px;
+  }
+  .load:before {
+  animation: ball1 1s infinite;
+  background-color: #fff;
+  box-shadow: 30px 0 0 #ff3d00;
+  margin-bottom: 10px;
+  }
+  .load:after {
+  animation: ball2 1s infinite;
+  background-color: #ff3d00;
+  box-shadow: 30px 0 0 #fff;
+  }
+  
+  @keyframes rotate {
+  0% { transform: rotate(0deg) scale(0.8) }
+  50% { transform: rotate(360deg) scale(1.2) }
+  100% { transform: rotate(720deg) scale(0.8) }
+  }
+  
+  @keyframes ball1 {
+  0% {
+    box-shadow: 30px 0 0 #ff3d00;
+  }
+  50% {
+    box-shadow: 0 0 0 #ff3d00;
+    margin-bottom: 0;
+    transform: translate(15px, 15px);
+  }
+  100% {
+    box-shadow: 30px 0 0 #ff3d00;
+    margin-bottom: 10px;
+  }
+  }
+  
+  @keyframes ball2 {
+  0% {
+    box-shadow: 30px 0 0 #fff;
+  }
+  50% {
+    box-shadow: 0 0 0 #fff;
+    margin-top: -20px;
+    transform: translate(15px, 15px);
+  }
+  100% {
+    box-shadow: 30px 0 0 #fff;
+    margin-top: 0;
+  }
+  }
+  
+  .slds-card {
+  background: rgb(243, 242, 242);
+  height: auto;
+  width: fit-content;
+  }
+  
+  .search-bar {
+  display: block;
+  margin: 0 0.5rem 0.3rem 0.5rem;
+  }
+  
+  .content {
+  display: flex;
+  flex-wrap: wrap;
+  }
+  
+  :host {
+    --slds-c-card-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.521);
+  }
+  
+  .cardClass{
+    box-shadow: 6px 7px 6px gray;
+  }
+  
+  c-l-i-s-document-generation-tile {
+  
+  height: auto;
+  width: 400px;
+  flex: 1;
+  box-shadow: 6px 7px 6px gray;
+  }
+  
+  .boxLoader {
+  width: 175px;
+  height: 80px;
+  display: block;
+  margin: auto;
+  background-image: radial-gradient(circle 25px at 25px 25px, #0a0e77 100%, transparent 0), radial-gradient(circle 50px at 50px 50px, #FFF 100%, transparent 0), radial-gradient(circle 25px at 25px 25px, #FFF 100%, transparent 0), linear-gradient(#FFF 50px, transparent 0);
+  background-size: 50px 50px, 100px 76px, 50px 50px, 120px 40px;
+  background-position: 0px 30px, 37px 0px, 122px 30px, 25px 40px;
+  background-repeat: no-repeat;
+  position: relative;
+  box-sizing: border-box;
+  }
+  .boxLoader::after {
+  content: '';  
+  left: 50%;
+  bottom: 30px;
+  transform: translate(-50%, 0);
+  position: absolute;
+  border: 15px solid transparent;
+  border-bottom-color: #fdfdfc;
+  box-sizing: border-box;
+  animation: fadePull 1s linear infinite;
+  }
+  .boxLoader::before {
+  content: '';  
+  left: 50%;
+  bottom: 15px;
+  transform: translate(-50%, 0);
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: #fdfdfc;
+  box-sizing: border-box;
+  animation: fadePull 1s linear infinite;
+  }
+  
+  @keyframes fadePull {
+  0% {
+    transform: translate(-50%, 15px);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, 0px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -15px);
+    opacity: 0;
+  }
+  }
+  
+  .retrieveLoader {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    position: relative;
+    animation: rotate 1s linear infinite
+  }
+  .retrieveLoader::before , .retrieveLoader::after {
+    content: "";
+    box-sizing: border-box;
+    position: absolute;
+    inset: 0px;
+    border-radius: 50%;
+    border: 5px solid #FFF;
+    animation: prixClipFix 2s linear infinite ;
+  }
+  .retrieveLoader::after{
+    border-color: #FF3D00;
+    animation: prixClipFix 2s linear infinite , rotate 0.5s linear infinite reverse;
+    inset: 6px;
+  }
+  
+  @keyframes rotate {
+    0%   {transform: rotate(0deg)}
+    100%   {transform: rotate(360deg)}
+  }
+  
+  @keyframes prixClipFix {
+      0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+      25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+      50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+      75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+      100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+  }
