@@ -4,4 +4,4 @@ function add(a, b) {
 }
 
 console.log("3 + 3 =", add(3, 3));
-console.log("Hello from the main branch!");
+console.log("Hello from the updated main branch!");
